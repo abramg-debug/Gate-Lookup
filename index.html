@@ -109,35 +109,43 @@
   }
 
   .gate-table{
+    margin-top:8px;
     overflow-x:auto;
     -webkit-overflow-scrolling:touch;
-    margin-top:4px;
+  }
+
+  .gate-header,
+  .gate-row{
+    display:grid;
+    grid-template-columns:70px minmax(110px, max-content) minmax(80px, max-content) auto;
+    column-gap:14px;
+    align-items:center;
+    min-width:max-content;
   }
 
   .gate-header{
-    display:grid;
-    grid-template-columns:70px minmax(180px, 1fr) 90px 60px;
-    column-gap:14px;
     font-weight:700;
     color:var(--muted);
-    margin-top:10px;
     margin-bottom:6px;
     font-size:13px;
-    min-width:430px;
   }
 
   .gate-row{
-    display:grid;
-    grid-template-columns:70px minmax(180px, 1fr) 90px 60px;
-    column-gap:14px;
-    margin:2px 0;
-    align-items:center;
-    min-width:430px;
+    padding:6px 0;
+    border-top:1px solid rgba(255,255,255,.12);
+  }
+
+  .gate-row:first-of-type{
+    border-top:none;
   }
 
   .gate-header > div,
   .gate-row > div{
     white-space:nowrap;
+  }
+
+  .gate-row .qr-cell{
+    justify-self:start;
   }
 
   .qr-yes{
@@ -149,6 +157,7 @@
     font-weight:700;
     display:inline-block;
   }
+
   .footer{
     margin-top:16px;
     display:flex;
@@ -623,7 +632,7 @@ function lookupGate(gateInput){
             <div>${displayGate(r.gate)}</div>
             <div>${escapeHtml(r.array)}</div>
             <div>${escapeHtml(r.type)}</div>
-            <div>${r.qr ? qrBadge(true) : ''}</div>
+            <div class="qr-cell">${r.qr ? qrBadge(true) : ''}</div>
           </div>
         </div>
       </div>
@@ -657,7 +666,7 @@ function lookupSite(term){
           <div>${displayGate(g.gate)}</div>
           <div>${escapeHtml(g.array)}</div>
           <div>${escapeHtml(g.type)}</div>
-          <div>${g.qr ? qrBadge(true) : ''}</div>
+          <div class="qr-cell">${g.qr ? qrBadge(true) : ''}</div>
         </div>
       `)
       .join('');
