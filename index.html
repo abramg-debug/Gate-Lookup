@@ -22,7 +22,7 @@
     color:var(--text);
   }
   .wrap{
-    max-width:760px;
+    max-width:780px;
     margin:32px auto;
     padding:16px;
   }
@@ -116,8 +116,30 @@
     margin-bottom:0;
   }
   .gate-list{
-    margin-top:6px;
-    line-height:1.55;
+    margin-top:8px;
+    line-height:1.5;
+  }
+  .gate-list div{
+    margin:2px 0;
+  }
+  .qr-yes{
+    color:white;
+    background:#f31260;
+    padding:2px 6px;
+    border-radius:4px;
+    font-size:11px;
+    font-weight:700;
+    margin-left:4px;
+  }
+  .match-block{
+    margin-bottom:10px;
+    padding-bottom:10px;
+    border-bottom:1px solid rgba(255,255,255,.06);
+  }
+  .match-block:last-child{
+    margin-bottom:0;
+    padding-bottom:0;
+    border-bottom:none;
   }
 </style>
 </head>
@@ -128,7 +150,7 @@
       <div class="row">
         <input id="gate" type="text" placeholder="Type a Gate # (e.g. 490) or Site Name (e.g. Pomona)" autocomplete="off" />
       </div>
-      <div class="hint">Type a gate number or site name. Numeric input searches Gate #; text searches Site Name and shows Array and Type.</div>
+      <div class="hint">Type a gate number or site name. Numeric input searches Gate #; partial gate numbers show matching gates. Text searches Site Name and shows Array, Type, and QR.</div>
       <div id="out" class="result" aria-live="polite"></div>
       <div class="footer">
         <span class="tiny">• Works offline • Single-file app</span>
@@ -137,7 +159,7 @@
   </div>
 
 <script>
-const DATA = [
+const RAW_DATA = [
   // C Line
   ['C', 60, 'Norwalk', '00300', 'East', 'ADA'],
   ['C', 60, 'Norwalk', '00301', 'East', 'Standard'],
@@ -380,6 +402,81 @@ const DATA = [
   ['K', 2941, 'LAX/MTC', '00218', 'North', 'ADA']
 ];
 
+const QR_GATES = new Set([
+  // A Line - Allen
+  '00505','00506',
+
+  // A Line - Firestone
+  '00606','00609',
+
+  // A Line - Glendora
+  '00462','00466',
+
+  // A Line - La Verne
+  '00478','00482',
+
+  // A Line - Lake
+  '00508','00510',
+
+  // A Line - Pomona
+  '00486','00493','00497',
+
+  // A Line - San Dimas
+  '00470',
+
+  // B Line - 7th Street/Metro Center
+  '00051','00052','00056','00057','00061','00062','00066','00067','00070','00071',
+
+  // B Line - Civic Center
+  '00028','00029','00912','00913',
+
+  // B Line - Hollywood/Western
+  '00127','00128',
+
+  // B Line - North Hollywood
+  '00157','00158','00165','00166',
+
+  // B Line - Pershing Square
+  '00040','00041','00046','00047',
+
+  // B Line - Vermont/Santa Monica
+  '00106','00107','00111','00112',
+
+  // B Line - Westlake/MacArthur Park
+  '00904','00905',
+
+  // B Line - Wilshire/Vermont
+  '00087','00090','00091','00095','00096',
+
+  // C Line - Aviation/Imperial
+  '00411','00412','00416','00417','00472','00538',
+
+  // C Line - Norwalk
+  '00304','00305','00534',
+
+  // A Line - Willowbrook - Rosa Parks
+  '00335','00340','00343','00346','00349','00350','00353','00358','00450','00451','00458','00459','00460',
+
+  // K Line - Douglas
+  '00442','00475',
+
+  // D Line - Wilshire/Normandie
+  '00172','00173',
+
+  // K Line - LAX/MTC
+  '00210','00211','00213','00214'
+]);
+
+const DATA = RAW_DATA.map(([line, siteId, siteName, gate, array, type]) => [
+  line,
+  siteId,
+  siteName,
+  gate,
+  array,
+  type,
+  QR_GATES.has(gate)
+]);
+
 const lineColors = {
   A: 'Blue',
   B: 'Red',
@@ -390,19 +487,19 @@ const lineColors = {
 };
 
 const byGate = new Map(
-  DATA.map(([line, siteId, siteName, gate, array, type]) => [
+  DATA.map(([line, siteId, siteName, gate, array, type, qr]) => [
     gate,
-    { line, siteId, siteName, gate, array, type }
+    { line, siteId, siteName, gate, array, type, qr }
   ])
 );
 
 const bySite = new Map();
-for (const [line, siteId, siteName, gate, array, type] of DATA) {
+for (const [line, siteId, siteName, gate, array, type, qr] of DATA) {
   const key = siteName.toLowerCase();
   if (!bySite.has(key)) {
     bySite.set(key, { line, siteId, siteName, gates: [] });
   }
-  bySite.get(key).gates.push({ gate, array, type });
+  bySite.get(key).gates.push({ gate, array, type, qr });
 }
 
 const $ = s => document.querySelector(s);
@@ -412,13 +509,17 @@ let timer;
 
 input.addEventListener('input', () => {
   clearTimeout(timer);
-  timer = setTimeout(runLookup, 150);
+  timer = setTimeout(runLookup, 120);
 });
 
 function padGate(val) {
   const s = (val || "").replace(/\D+/g, "");
   if (!s) return "";
   return s.padStart(5, "0");
+}
+
+function digitsOnly(val) {
+  return (val || "").replace(/\D+/g, "");
 }
 
 function escapeHtml(str) {
@@ -429,6 +530,10 @@ function escapeHtml(str) {
     '"':'&quot;',
     "'":'&#39;'
   }[ch]));
+}
+
+function qrBadge(qr) {
+  return qr ? '<span class="qr-yes">QR</span>' : '';
 }
 
 function runLookup() {
@@ -446,28 +551,58 @@ function runLookup() {
   }
 }
 
-function lookupGate(gate) {
-  const norm = padGate(gate);
-  const rec = byGate.get(norm);
+function lookupGate(gateInput) {
+  const rawDigits = digitsOnly(gateInput);
+  const norm = padGate(gateInput);
 
-  if (rec) {
-    const color = lineColors[rec.line] || 'Unknown';
+  if (!rawDigits) {
+    out.className = 'result err';
+    out.innerHTML = `<div class="v">Enter a gate number.</div>`;
+    return;
+  }
+
+  const exact = byGate.get(norm);
+  if (exact) {
+    const color = lineColors[exact.line] || 'Unknown';
     out.className = 'result ok';
     out.innerHTML = `<div class="kvs">
-      <div class="k">Gate #</div><div class="v">${escapeHtml(rec.gate)}</div>
-      <div class="k">Line</div><div class="v">${escapeHtml(rec.line)} (${escapeHtml(color)})</div>
-      <div class="k">Site ID</div><div class="v">${escapeHtml(rec.siteId)}</div>
-      <div class="k">Site Name</div><div class="v">${escapeHtml(rec.siteName)}</div>
-      <div class="k">Array</div><div class="v">${escapeHtml(rec.array)}</div>
-      <div class="k">Type</div><div class="v">${escapeHtml(rec.type)}</div>
-    </div><span class="pill">Match found</span>`;
-  } else {
+      <div class="k">Gate #</div><div class="v">${escapeHtml(exact.gate)}</div>
+      <div class="k">Line</div><div class="v">${escapeHtml(exact.line)} (${escapeHtml(color)})</div>
+      <div class="k">Site ID</div><div class="v">${escapeHtml(exact.siteId)}</div>
+      <div class="k">Site Name</div><div class="v">${escapeHtml(exact.siteName)}</div>
+      <div class="k">Array</div><div class="v">${escapeHtml(exact.array)}</div>
+      <div class="k">Type</div><div class="v">${escapeHtml(exact.type)}</div>
+      ${exact.qr ? `<div class="k">QR Scanner</div><div class="v">${qrBadge(true)}</div>` : ''}
+    </div><span class="pill">Exact match</span>`;
+    return;
+  }
+
+  const partialMatches = [...byGate.values()]
+    .filter(rec => rec.gate.includes(rawDigits))
+    .sort((a, b) => a.gate.localeCompare(b.gate));
+
+  if (partialMatches.length === 0) {
     out.className = 'result err';
     out.innerHTML = `<div class="kvs">
       <div class="k">Gate #</div><div class="v">${escapeHtml(norm)}</div>
       <div class="k">Status</div><div class="v">Not found</div>
     </div><span class="pill" style="color:var(--err)">No match</span>`;
+    return;
   }
+
+  const html = partialMatches.map(rec => {
+    const color = lineColors[rec.line] || 'Unknown';
+    return `<div class="match-block">
+      <div><b>${escapeHtml(rec.gate)}</b> — ${escapeHtml(rec.siteName)} (Line ${escapeHtml(rec.line)} – ${escapeHtml(color)} – Site ID ${escapeHtml(rec.siteId)})</div>
+      <div class="gate-list">
+        <div>Array: ${escapeHtml(rec.array)}</div>
+        <div>Type: ${escapeHtml(rec.type)} ${rec.qr ? qrBadge(true) : ''}</div>
+      </div>
+    </div>`;
+  }).join('');
+
+  out.className = 'result ok';
+  out.innerHTML = html + `<span class="pill">${partialMatches.length} matching gate${partialMatches.length > 1 ? 's' : ''}</span>`;
 }
 
 function lookupSite(term) {
@@ -485,12 +620,12 @@ function lookupSite(term) {
     const gateList = s.gates
       .slice()
       .sort((a, b) => a.gate.localeCompare(b.gate))
-      .map(g => `${escapeHtml(g.gate)} (${escapeHtml(g.array)} / ${escapeHtml(g.type)})`)
-      .join(', ');
+      .map(g => `<div>${escapeHtml(g.gate)} (${escapeHtml(g.array)} / ${escapeHtml(g.type)})${g.qr ? ' <span class="qr-yes">QR</span>' : ''}</div>`)
+      .join('');
 
     return `<div class="site-block">
       <div><b>${escapeHtml(s.siteName)}</b> (Line ${escapeHtml(s.line)} – ${escapeHtml(color)} – Site ID ${escapeHtml(s.siteId)})</div>
-      <div class="gate-list">Gates: ${gateList}</div>
+      <div class="gate-list">${gateList}</div>
     </div>`;
   }).join('');
 
