@@ -1,0 +1,502 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Gate Lookup</title>
+<style>
+  :root{
+    --bg:#0b1220;
+    --card:#121a2b;
+    --text:#e8eefc;
+    --muted:#9fb0d8;
+    --ok:#17c964;
+    --err:#f31260;
+    --accent:#3b82f6;
+  }
+  *{box-sizing:border-box}
+  body{
+    margin:0;
+    font-family:system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif;
+    background:var(--bg);
+    color:var(--text);
+  }
+  .wrap{
+    max-width:760px;
+    margin:32px auto;
+    padding:16px;
+  }
+  .card{
+    background:var(--card);
+    border:1px solid rgba(255,255,255,.06);
+    border-radius:16px;
+    box-shadow:0 6px 20px rgba(0,0,0,.35);
+    padding:18px;
+  }
+  h1{
+    margin:0 0 12px;
+    font-size:20px;
+    font-weight:700;
+    letter-spacing:.2px;
+  }
+  .row{
+    display:flex;
+    gap:10px;
+    align-items:center;
+  }
+  input[type="text"]{
+    flex:1;
+    padding:14px 14px;
+    border-radius:12px;
+    border:1px solid rgba(255,255,255,.1);
+    background:#0f172a;
+    color:var(--text);
+    font-size:18px;
+  }
+  input::placeholder{color:#93a3c7}
+  .hint{
+    color:var(--muted);
+    font-size:13px;
+    margin-top:8px;
+  }
+  .result{
+    margin-top:16px;
+    padding:14px 14px;
+    border-radius:12px;
+    border:1px solid rgba(255,255,255,.08);
+    background:#0e1628;
+    min-height:64px;
+    display:flex;
+    flex-direction:column;
+    gap:6px;
+  }
+  .result.ok{
+    outline:2px solid color-mix(in oklab, var(--ok) 55%, transparent);
+  }
+  .result.err{
+    outline:2px solid color-mix(in oklab, var(--err) 55%, transparent);
+  }
+  .kvs{
+    display:grid;
+    grid-template-columns:120px 1fr;
+    gap:8px 12px;
+  }
+  .k{color:var(--muted)}
+  .v{font-weight:600}
+  .pill{
+    display:inline-flex;
+    align-items:center;
+    gap:8px;
+    background:#0c1222;
+    border:1px solid rgba(255,255,255,.08);
+    color:var(--muted);
+    padding:8px 10px;
+    border-radius:999px;
+    font-size:12px;
+    margin-top:8px;
+  }
+  .footer{
+    margin-top:16px;
+    display:flex;
+    gap:8px;
+    flex-wrap:wrap;
+  }
+  .tiny{
+    font-size:12px;
+    color:var(--muted);
+  }
+  .site-block{
+    margin-bottom:12px;
+    padding-bottom:10px;
+    border-bottom:1px solid rgba(255,255,255,.06);
+  }
+  .site-block:last-child{
+    border-bottom:none;
+    padding-bottom:0;
+    margin-bottom:0;
+  }
+  .gate-list{
+    margin-top:6px;
+    line-height:1.55;
+  }
+</style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="card">
+      <h1>Gate Lookup</h1>
+      <div class="row">
+        <input id="gate" type="text" placeholder="Type a Gate # (e.g. 490) or Site Name (e.g. Pomona)" autocomplete="off" />
+      </div>
+      <div class="hint">Type a gate number or site name. Numeric input searches Gate #; text searches Site Name and shows Array and Type.</div>
+      <div id="out" class="result" aria-live="polite"></div>
+      <div class="footer">
+        <span class="tiny">• Works offline • Single-file app</span>
+      </div>
+    </div>
+  </div>
+
+<script>
+const DATA = [
+  // C Line
+  ['C', 60, 'Norwalk', '00300', 'East', 'ADA'],
+  ['C', 60, 'Norwalk', '00301', 'East', 'Standard'],
+  ['C', 60, 'Norwalk', '00302', 'East', 'Standard'],
+  ['C', 60, 'Norwalk', '00303', 'East', 'Standard'],
+  ['C', 60, 'Norwalk', '00304', 'East', 'ADA'],
+  ['C', 60, 'Norwalk', '00305', 'East', 'ADA'],
+  ['C', 60, 'Norwalk', '00307', 'West', 'ADA'],
+  ['C', 60, 'Norwalk', '00308', 'West', 'Standard'],
+  ['C', 60, 'Norwalk', '00532', 'West', 'Standard'],
+  ['C', 60, 'Norwalk', '00533', 'West', 'ADA'],
+  ['C', 60, 'Norwalk', '00534', 'West', 'ADA'],
+
+  // A Line
+  ['A', 73, 'Sierra Madre Villa', '00500', 'Main', 'Standard'],
+  ['A', 73, 'Sierra Madre Villa', '00501', 'Main', 'Standard'],
+  ['A', 73, 'Sierra Madre Villa', '00502', 'Main', 'Standard'],
+  ['A', 73, 'Sierra Madre Villa', '00503', 'Main', 'ADA'],
+  ['A', 73, 'Sierra Madre Villa', '00536', 'Main', 'ADA'],
+
+  // B Line
+  ['B', 104, 'Westlake/MacArthur Park', '00901', 'South', 'Standard'],
+  ['B', 104, 'Westlake/MacArthur Park', '00902', 'South', 'Standard'],
+  ['B', 104, 'Westlake/MacArthur Park', '00903', 'South', 'Standard'],
+  ['B', 104, 'Westlake/MacArthur Park', '00904', 'South', 'ADA'],
+  ['B', 104, 'Westlake/MacArthur Park', '00905', 'South', 'ADA'],
+  ['B', 104, 'Westlake/MacArthur Park', '00906', 'South', 'ADA'],
+  ['B', 104, 'Westlake/MacArthur Park', '00907', 'South', 'Standard'],
+  ['B', 104, 'Westlake/MacArthur Park', '00908', 'South', 'Standard'],
+  ['B', 104, 'Westlake/MacArthur Park', '00909', 'South', 'Standard'],
+  ['B', 104, 'Westlake/MacArthur Park', '00910', 'South', 'Standard'],
+
+  ['B', 120, 'North Hollywood', '00154', 'West', 'Standard'],
+  ['B', 120, 'North Hollywood', '00155', 'West', 'Standard'],
+  ['B', 120, 'North Hollywood', '00156', 'West', 'Standard'],
+  ['B', 120, 'North Hollywood', '00157', 'West', 'Standard'],
+  ['B', 120, 'North Hollywood', '00158', 'West', 'ADA'],
+  ['B', 120, 'North Hollywood', '00161', 'East', 'Standard'],
+  ['B', 120, 'North Hollywood', '00162', 'East', 'Standard'],
+  ['B', 120, 'North Hollywood', '00163', 'East', 'Standard'],
+  ['B', 120, 'North Hollywood', '00164', 'East', 'Standard'],
+  ['B', 120, 'North Hollywood', '00165', 'East', 'Standard'],
+  ['B', 120, 'North Hollywood', '00166', 'East', 'ADA'],
+
+  ['B', 122, 'Civic Center', '00026', 'North', 'Standard'],
+  ['B', 122, 'Civic Center', '00027', 'North', 'Standard'],
+  ['B', 122, 'Civic Center', '00028', 'North', 'ADA'],
+  ['B', 122, 'Civic Center', '00029', 'North', 'ADA'],
+  ['B', 122, 'Civic Center', '00030', 'North', 'ADA'],
+  ['B', 122, 'Civic Center', '00031', 'North', 'Standard'],
+  ['B', 122, 'Civic Center', '00032', 'North', 'Standard'],
+  ['B', 122, 'Civic Center', '00911', 'South', 'Standard'],
+  ['B', 122, 'Civic Center', '00912', 'South', 'Standard'],
+  ['B', 122, 'Civic Center', '00913', 'South', 'ADA'],
+
+  ['B', 123, 'Pershing Square', '00035', 'South', 'Standard'],
+  ['B', 123, 'Pershing Square', '00036', 'South', 'Standard'],
+  ['B', 123, 'Pershing Square', '00037', 'South', 'Standard'],
+  ['B', 123, 'Pershing Square', '00038', 'South', 'Standard'],
+  ['B', 123, 'Pershing Square', '00039', 'South', 'Standard'],
+  ['B', 123, 'Pershing Square', '00040', 'South', 'Standard'],
+  ['B', 123, 'Pershing Square', '00041', 'South', 'ADA'],
+  ['B', 123, 'Pershing Square', '00043', 'North', 'Standard'],
+  ['B', 123, 'Pershing Square', '00044', 'North', 'Standard'],
+  ['B', 123, 'Pershing Square', '00045', 'North', 'Standard'],
+  ['B', 123, 'Pershing Square', '00046', 'North', 'Standard'],
+  ['B', 123, 'Pershing Square', '00047', 'North', 'Standard'],
+
+  ['B', 124, '7th Street/Metro Center', '00049', 'Figueroa', 'Standard'],
+  ['B', 124, '7th Street/Metro Center', '00050', 'Figueroa', 'Standard'],
+  ['B', 124, '7th Street/Metro Center', '00051', 'Figueroa', 'Standard'],
+  ['B', 124, '7th Street/Metro Center', '00052', 'Figueroa', 'ADA'],
+  ['B', 124, '7th Street/Metro Center', '00054', 'Figueroa', 'Standard'],
+  ['B', 124, '7th Street/Metro Center', '00055', 'Figueroa', 'Standard'],
+  ['B', 124, '7th Street/Metro Center', '00056', 'Figueroa', 'Standard'],
+  ['B', 124, '7th Street/Metro Center', '00057', 'Figueroa', 'Standard'],
+  ['B', 124, '7th Street/Metro Center', '00059', 'Hope', 'Standard'],
+  ['B', 124, '7th Street/Metro Center', '00060', 'Hope', 'Standard'],
+  ['B', 124, '7th Street/Metro Center', '00061', 'Hope', 'Standard'],
+  ['B', 124, '7th Street/Metro Center', '00062', 'Hope', 'ADA'],
+  ['B', 124, '7th Street/Metro Center', '00064', 'Hope', 'Standard'],
+  ['B', 124, '7th Street/Metro Center', '00065', 'Hope', 'Standard'],
+  ['B', 124, '7th Street/Metro Center', '00066', 'Hope', 'Standard'],
+  ['B', 124, '7th Street/Metro Center', '00067', 'Hope', 'Standard'],
+  ['B', 124, '7th Street/Metro Center', '00069', 'Flower', 'Standard'],
+  ['B', 124, '7th Street/Metro Center', '00070', 'Flower', 'Standard'],
+  ['B', 124, '7th Street/Metro Center', '00071', 'Flower', 'ADA'],
+
+  ['B', 125, 'Wilshire/Vermont', '00087', 'Main', 'Standard'],
+  ['B', 125, 'Wilshire/Vermont', '00088', 'Main', 'Standard'],
+  ['B', 125, 'Wilshire/Vermont', '00089', 'Main', 'Standard'],
+  ['B', 125, 'Wilshire/Vermont', '00090', 'Main', 'Standard'],
+  ['B', 125, 'Wilshire/Vermont', '00091', 'Main', 'Standard'],
+  ['B', 125, 'Wilshire/Vermont', '00095', 'Elevator', 'Standard'],
+  ['B', 125, 'Wilshire/Vermont', '00096', 'Elevator', 'ADA'],
+
+  ['B', 129, 'Vermont/Santa Monica', '00104', 'North', 'Standard'],
+  ['B', 129, 'Vermont/Santa Monica', '00105', 'North', 'Standard'],
+  ['B', 129, 'Vermont/Santa Monica', '00106', 'North', 'Standard'],
+  ['B', 129, 'Vermont/Santa Monica', '00107', 'North', 'ADA'],
+  ['B', 129, 'Vermont/Santa Monica', '00110', 'South', 'Standard'],
+  ['B', 129, 'Vermont/Santa Monica', '00111', 'South', 'Standard'],
+  ['B', 129, 'Vermont/Santa Monica', '00112', 'South', 'ADA'],
+
+  ['B', 131, 'Hollywood/Western', '00124', 'Main', 'Standard'],
+  ['B', 131, 'Hollywood/Western', '00125', 'Main', 'Standard'],
+  ['B', 131, 'Hollywood/Western', '00126', 'Main', 'Standard'],
+  ['B', 131, 'Hollywood/Western', '00127', 'Main', 'Standard'],
+  ['B', 131, 'Hollywood/Western', '00128', 'Main', 'ADA'],
+
+  ['A', 144, 'Firestone', '00605', 'North', 'Standard'],
+  ['A', 144, 'Firestone', '00606', 'North', 'Standard'],
+  ['A', 144, 'Firestone', '00608', 'South', 'Standard'],
+  ['A', 144, 'Firestone', '00609', 'South', 'ADA'],
+
+  ['A', 145, 'Willowbrook - Rosa Parks', '00333', 'Center Plaza', 'Standard'],
+  ['A', 145, 'Willowbrook - Rosa Parks', '00334', 'Center Plaza', 'Standard'],
+  ['A', 145, 'Willowbrook - Rosa Parks', '00335', 'Center Plaza', 'ADA'],
+  ['A', 145, 'Willowbrook - Rosa Parks', '00337', 'Center Plaza', 'Standard'],
+  ['A', 145, 'Willowbrook - Rosa Parks', '00340', 'West', 'ADA'],
+  ['A', 145, 'Willowbrook - Rosa Parks', '00342', 'West', 'Standard'],
+  ['A', 145, 'Willowbrook - Rosa Parks', '00343', 'West', 'Standard'],
+  ['A', 145, 'Willowbrook - Rosa Parks', '00345', 'West', 'Standard'],
+  ['A', 145, 'Willowbrook - Rosa Parks', '00346', 'West', 'Standard'],
+  ['A', 145, 'Willowbrook - Rosa Parks', '00349', 'Transfer Mezzanine - 1', 'Standard'],
+  ['A', 145, 'Willowbrook - Rosa Parks', '00350', 'Transfer Mezzanine - 1', 'Standard'],
+  ['A', 145, 'Willowbrook - Rosa Parks', '00351', 'Transfer Mezzanine - 1', 'Standard'],
+  ['A', 145, 'Willowbrook - Rosa Parks', '00353', 'Street Level Elev', 'ADA'],
+  ['A', 145, 'Willowbrook - Rosa Parks', '00357', 'Transfer Mezzanine - 2', 'Standard'],
+  ['A', 145, 'Willowbrook - Rosa Parks', '00358', 'Transfer Mezzanine - 2', 'Standard'],
+  ['A', 145, 'Willowbrook - Rosa Parks', '00450', 'South', 'ADA'],
+  ['A', 145, 'Willowbrook - Rosa Parks', '00451', 'Transfer Mezzanine - 2', 'ADA'],
+  ['A', 145, 'Willowbrook - Rosa Parks', '00452', 'South', 'Standard'],
+  ['A', 145, 'Willowbrook - Rosa Parks', '00453', 'Transfer Mezzanine - 1', 'Standard'],
+  ['A', 145, 'Willowbrook - Rosa Parks', '00454', 'Transfer Mezzanine - 1', 'Standard'],
+  ['A', 145, 'Willowbrook - Rosa Parks', '00455', 'Transfer Mezzanine - 1', 'Standard'],
+  ['A', 145, 'Willowbrook - Rosa Parks', '00456', 'Transfer Mezzanine - 1', 'Standard'],
+  ['A', 145, 'Willowbrook - Rosa Parks', '00458', 'North-East', 'Standard'],
+  ['A', 145, 'Willowbrook - Rosa Parks', '00459', 'North-East', 'ADA'],
+  ['A', 145, 'Willowbrook - Rosa Parks', '00460', 'Center Plaza', 'ADA'],
+
+  ['A', 167, 'Lake', '00508', 'Main', 'Standard'],
+  ['A', 167, 'Lake', '00510', 'Main', 'ADA'],
+
+  ['A', 168, 'Allen', '00505', 'North East', 'Standard'],
+  ['A', 168, 'Allen', '00506', 'North East', 'ADA'],
+  ['A', 168, 'Allen', '00507', 'North East', 'ADA'],
+
+  // K Line
+  ['K', 171, 'Douglas', '00436', 'North', 'Standard'],
+  ['K', 171, 'Douglas', '00437', 'North', 'Standard'],
+  ['K', 171, 'Douglas', '00438', 'North', 'ADA'],
+  ['K', 171, 'Douglas', '00440', 'South', 'Standard'],
+  ['K', 171, 'Douglas', '00441', 'South', 'Standard'],
+  ['K', 171, 'Douglas', '00442', 'South', 'ADA'],
+  ['K', 171, 'Douglas', '00475', 'South', 'ADA'],
+  ['K', 171, 'Douglas', '00530', 'South', 'ADA'],
+
+  // C Line
+  ['C', 174, 'Aviation/Imperial', '00411', 'East', 'Standard'],
+  ['C', 174, 'Aviation/Imperial', '00412', 'East', 'Standard'],
+  ['C', 174, 'Aviation/Imperial', '00413', 'East', 'ADA'],
+  ['C', 174, 'Aviation/Imperial', '00415', 'West', 'Standard'],
+  ['C', 174, 'Aviation/Imperial', '00416', 'West', 'Standard'],
+  ['C', 174, 'Aviation/Imperial', '00417', 'West', 'ADA'],
+  ['C', 174, 'Aviation/Imperial', '00472', 'Center', 'ADA'],
+  ['C', 174, 'Aviation/Imperial', '00538', 'Center', 'ADA'],
+
+  // A Line
+  ['A', 2975, 'Glendora', '00462', 'West', 'ADA'],
+  ['A', 2975, 'Glendora', '00463', 'West', 'ADA'],
+  ['A', 2975, 'Glendora', '00466', 'East', 'ADA'],
+  ['A', 2975, 'Glendora', '00467', 'East', 'ADA'],
+
+  ['A', 2976, 'San Dimas', '00470', 'West', 'ADA'],
+  ['A', 2976, 'San Dimas', '00471', 'West', 'ADA'],
+
+  ['A', 2977, 'La Verne', '00478', 'West', 'ADA'],
+  ['A', 2977, 'La Verne', '00479', 'West', 'ADA'],
+  ['A', 2977, 'La Verne', '00482', 'East', 'ADA'],
+  ['A', 2977, 'La Verne', '00483', 'East', 'ADA'],
+
+  ['A', 2978, 'Pomona', '00486', 'West', 'ADA'],
+  ['A', 2978, 'Pomona', '00487', 'West', 'ADA'],
+  ['A', 2978, 'Pomona', '00488', 'West', 'Standard'],
+  ['A', 2978, 'Pomona', '00489', 'West', 'Standard'],
+  ['A', 2978, 'Pomona', '00490', 'West', 'Standard'],
+  ['A', 2978, 'Pomona', '00493', 'East - West', 'ADA'],
+  ['A', 2978, 'Pomona', '00494', 'East - West', 'ADA'],
+  ['A', 2978, 'Pomona', '00497', 'East - East', 'ADA'],
+  ['A', 2978, 'Pomona', '00498', 'East - East', 'ADA'],
+
+  // D Line
+  ['D', 126, 'Wilshire/Normandie', '00169', 'Main', 'Standard'],
+  ['D', 126, 'Wilshire/Normandie', '00170', 'Main', 'Standard'],
+  ['D', 126, 'Wilshire/Normandie', '00171', 'Main', 'Standard'],
+  ['D', 126, 'Wilshire/Normandie', '00172', 'Main', 'Standard'],
+  ['D', 126, 'Wilshire/Normandie', '00173', 'Main', 'Standard'],
+  ['D', 126, 'Wilshire/Normandie', '00950', 'Main', 'ADA'],
+  ['D', 126, 'Wilshire/Normandie', '00951', 'Main', 'ADA'],
+
+  ['D', 2986, 'Wilshire/La Brea', '00184', 'Main', 'Standard'],
+  ['D', 2986, 'Wilshire/La Brea', '00185', 'Main', 'Standard'],
+  ['D', 2986, 'Wilshire/La Brea', '00186', 'Main', 'Standard'],
+  ['D', 2986, 'Wilshire/La Brea', '00187', 'Main', 'ADA'],
+
+  ['D', 2987, 'Wilshire/Fairfax', '00190', 'Main', 'Standard'],
+  ['D', 2987, 'Wilshire/Fairfax', '00191', 'Main', 'Standard'],
+  ['D', 2987, 'Wilshire/Fairfax', '00192', 'Main', 'Standard'],
+  ['D', 2987, 'Wilshire/Fairfax', '00193', 'Main', 'ADA'],
+
+  ['D', 2988, 'Wilshire/La Cienega', '00916', 'Main', 'Standard'],
+  ['D', 2988, 'Wilshire/La Cienega', '00917', 'Main', 'Standard'],
+  ['D', 2988, 'Wilshire/La Cienega', '00918', 'Main', 'Standard'],
+  ['D', 2988, 'Wilshire/La Cienega', '00919', 'Main', 'Standard'],
+  ['D', 2988, 'Wilshire/La Cienega', '00920', 'Main', 'Standard'],
+  ['D', 2988, 'Wilshire/La Cienega', '00921', 'Main', 'Standard'],
+  ['D', 2988, 'Wilshire/La Cienega', '00922', 'Main', 'ADA'],
+
+  ['D', 127, 'Wilshire/Western', '00930', 'Main', 'Standard'],
+  ['D', 127, 'Wilshire/Western', '00931', 'Main', 'Standard'],
+  ['D', 127, 'Wilshire/Western', '00932', 'Main', 'Standard'],
+  ['D', 127, 'Wilshire/Western', '00933', 'Main', 'Standard'],
+  ['D', 127, 'Wilshire/Western', '00934', 'Main', 'ADA'],
+  ['D', 127, 'Wilshire/Western', '00935', 'Main', 'ADA'],
+  ['D', 127, 'Wilshire/Western', '00936', 'Main', 'ADA'],
+
+  // K Line
+  ['K', 2941, 'LAX/MTC', '00206', 'South', 'ADA'],
+  ['K', 2941, 'LAX/MTC', '00207', 'South', 'ADA'],
+  ['K', 2941, 'LAX/MTC', '00208', 'South', 'ADA'],
+  ['K', 2941, 'LAX/MTC', '00209', 'South', 'ADA'],
+  ['K', 2941, 'LAX/MTC', '00210', 'South', 'ADA'],
+  ['K', 2941, 'LAX/MTC', '00211', 'South', 'ADA'],
+  ['K', 2941, 'LAX/MTC', '00213', 'North', 'ADA'],
+  ['K', 2941, 'LAX/MTC', '00214', 'North', 'ADA'],
+  ['K', 2941, 'LAX/MTC', '00215', 'North', 'ADA'],
+  ['K', 2941, 'LAX/MTC', '00216', 'North', 'ADA'],
+  ['K', 2941, 'LAX/MTC', '00217', 'North', 'ADA'],
+  ['K', 2941, 'LAX/MTC', '00218', 'North', 'ADA']
+];
+
+const lineColors = {
+  A: 'Blue',
+  B: 'Red',
+  C: 'Green',
+  D: 'Purple',
+  E: 'Yellow',
+  K: 'Pink'
+};
+
+const byGate = new Map(
+  DATA.map(([line, siteId, siteName, gate, array, type]) => [
+    gate,
+    { line, siteId, siteName, gate, array, type }
+  ])
+);
+
+const bySite = new Map();
+for (const [line, siteId, siteName, gate, array, type] of DATA) {
+  const key = siteName.toLowerCase();
+  if (!bySite.has(key)) {
+    bySite.set(key, { line, siteId, siteName, gates: [] });
+  }
+  bySite.get(key).gates.push({ gate, array, type });
+}
+
+const $ = s => document.querySelector(s);
+const input = $("#gate");
+const out = $("#out");
+let timer;
+
+input.addEventListener('input', () => {
+  clearTimeout(timer);
+  timer = setTimeout(runLookup, 150);
+});
+
+function padGate(val) {
+  const s = (val || "").replace(/\D+/g, "");
+  if (!s) return "";
+  return s.padStart(5, "0");
+}
+
+function escapeHtml(str) {
+  return String(str).replace(/[&<>"']/g, ch => ({
+    '&':'&amp;',
+    '<':'&lt;',
+    '>':'&gt;',
+    '"':'&quot;',
+    "'":'&#39;'
+  }[ch]));
+}
+
+function runLookup() {
+  const val = input.value.trim();
+  if (!val) {
+    out.className = 'result';
+    out.innerHTML = '';
+    return;
+  }
+
+  if (/^\d+$/.test(val)) {
+    lookupGate(val);
+  } else {
+    lookupSite(val);
+  }
+}
+
+function lookupGate(gate) {
+  const norm = padGate(gate);
+  const rec = byGate.get(norm);
+
+  if (rec) {
+    const color = lineColors[rec.line] || 'Unknown';
+    out.className = 'result ok';
+    out.innerHTML = `<div class="kvs">
+      <div class="k">Gate #</div><div class="v">${escapeHtml(rec.gate)}</div>
+      <div class="k">Line</div><div class="v">${escapeHtml(rec.line)} (${escapeHtml(color)})</div>
+      <div class="k">Site ID</div><div class="v">${escapeHtml(rec.siteId)}</div>
+      <div class="k">Site Name</div><div class="v">${escapeHtml(rec.siteName)}</div>
+      <div class="k">Array</div><div class="v">${escapeHtml(rec.array)}</div>
+      <div class="k">Type</div><div class="v">${escapeHtml(rec.type)}</div>
+    </div><span class="pill">Match found</span>`;
+  } else {
+    out.className = 'result err';
+    out.innerHTML = `<div class="kvs">
+      <div class="k">Gate #</div><div class="v">${escapeHtml(norm)}</div>
+      <div class="k">Status</div><div class="v">Not found</div>
+    </div><span class="pill" style="color:var(--err)">No match</span>`;
+  }
+}
+
+function lookupSite(term) {
+  const q = term.toLowerCase();
+  const matches = [...bySite.values()].filter(s => s.siteName.toLowerCase().includes(q));
+
+  if (matches.length === 0) {
+    out.className = 'result err';
+    out.innerHTML = `<div class="v">No sites found matching “${escapeHtml(term)}”.</div>`;
+    return;
+  }
+
+  const html = matches.map(s => {
+    const color = lineColors[s.line] || 'Unknown';
+    const gateList = s.gates
+      .slice()
+      .sort((a, b) => a.gate.localeCompare(b.gate))
+      .map(g => `${escapeHtml(g.gate)} (${escapeHtml(g.array)} / ${escapeHtml(g.type)})`)
+      .join(', ');
+
+    return `<div class="site-block">
+      <div><b>${escapeHtml(s.siteName)}</b> (Line ${escapeHtml(s.line)} – ${escapeHtml(color)} – Site ID ${escapeHtml(s.siteId)})</div>
+      <div class="gate-list">Gates: ${gateList}</div>
+    </div>`;
+  }).join('');
+
+  out.className = 'result ok';
+  out.innerHTML = html + `<span class="pill">${matches.length} site${matches.length > 1 ? 's' : ''} found</span>`;
+}
+</script>
+</body>
+</html>
