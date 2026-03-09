@@ -107,23 +107,39 @@
     padding-bottom:0;
     border-bottom:none;
   }
+
+  .gate-table{
+    overflow-x:auto;
+    -webkit-overflow-scrolling:touch;
+    margin-top:4px;
+  }
+
   .gate-header{
     display:grid;
-    grid-template-columns:70px 1fr 110px 60px;
+    grid-template-columns:70px minmax(180px, 1fr) 90px 60px;
     column-gap:14px;
     font-weight:700;
     color:var(--muted);
     margin-top:10px;
     margin-bottom:6px;
     font-size:13px;
+    min-width:430px;
   }
+
   .gate-row{
     display:grid;
-    grid-template-columns:70px 1fr 110px 60px;
+    grid-template-columns:70px minmax(180px, 1fr) 90px 60px;
     column-gap:14px;
     margin:2px 0;
     align-items:center;
+    min-width:430px;
   }
+
+  .gate-header > div,
+  .gate-row > div{
+    white-space:nowrap;
+  }
+
   .qr-yes{
     color:white;
     background:#f31260;
@@ -162,25 +178,73 @@
 
 <script>
 const RAW_DATA = [
-  // C Line
-  ['C', 60, 'Norwalk', '00300', 'East', 'ADA'],
-  ['C', 60, 'Norwalk', '00301', 'East', 'Standard'],
-  ['C', 60, 'Norwalk', '00302', 'East', 'Standard'],
-  ['C', 60, 'Norwalk', '00303', 'East', 'Standard'],
-  ['C', 60, 'Norwalk', '00304', 'East', 'ADA'],
-  ['C', 60, 'Norwalk', '00305', 'East', 'ADA'],
-  ['C', 60, 'Norwalk', '00307', 'West', 'ADA'],
-  ['C', 60, 'Norwalk', '00308', 'West', 'Standard'],
-  ['C', 60, 'Norwalk', '00532', 'West', 'Standard'],
-  ['C', 60, 'Norwalk', '00533', 'West', 'ADA'],
-  ['C', 60, 'Norwalk', '00534', 'West', 'ADA'],
-
   // A Line
   ['A', 73, 'Sierra Madre Villa', '00500', 'Main', 'Standard'],
   ['A', 73, 'Sierra Madre Villa', '00501', 'Main', 'Standard'],
   ['A', 73, 'Sierra Madre Villa', '00502', 'Main', 'Standard'],
   ['A', 73, 'Sierra Madre Villa', '00503', 'Main', 'ADA'],
   ['A', 73, 'Sierra Madre Villa', '00536', 'Main', 'ADA'],
+
+  ['A', 144, 'Firestone', '00605', 'North', 'Standard'],
+  ['A', 144, 'Firestone', '00606', 'North', 'Standard'],
+  ['A', 144, 'Firestone', '00608', 'South', 'Standard'],
+  ['A', 144, 'Firestone', '00609', 'South', 'ADA'],
+
+  ['A', 145, 'Willowbrook - Rosa Parks', '00333', 'Center Plaza', 'Standard'],
+  ['A', 145, 'Willowbrook - Rosa Parks', '00334', 'Center Plaza', 'Standard'],
+  ['A', 145, 'Willowbrook - Rosa Parks', '00335', 'Center Plaza', 'ADA'],
+  ['A', 145, 'Willowbrook - Rosa Parks', '00337', 'Center Plaza', 'Standard'],
+  ['A', 145, 'Willowbrook - Rosa Parks', '00340', 'West', 'ADA'],
+  ['A', 145, 'Willowbrook - Rosa Parks', '00342', 'West', 'Standard'],
+  ['A', 145, 'Willowbrook - Rosa Parks', '00343', 'West', 'Standard'],
+  ['A', 145, 'Willowbrook - Rosa Parks', '00345', 'West', 'Standard'],
+  ['A', 145, 'Willowbrook - Rosa Parks', '00346', 'West', 'Standard'],
+  ['A', 145, 'Willowbrook - Rosa Parks', '00349', 'Transfer Mezzanine - 1', 'Standard'],
+  ['A', 145, 'Willowbrook - Rosa Parks', '00350', 'Transfer Mezzanine - 1', 'Standard'],
+  ['A', 145, 'Willowbrook - Rosa Parks', '00351', 'Transfer Mezzanine - 1', 'Standard'],
+  ['A', 145, 'Willowbrook - Rosa Parks', '00353', 'Street Level Elev', 'ADA'],
+  ['A', 145, 'Willowbrook - Rosa Parks', '00357', 'Transfer Mezzanine - 2', 'Standard'],
+  ['A', 145, 'Willowbrook - Rosa Parks', '00358', 'Transfer Mezzanine - 2', 'Standard'],
+  ['A', 145, 'Willowbrook - Rosa Parks', '00450', 'South', 'ADA'],
+  ['A', 145, 'Willowbrook - Rosa Parks', '00451', 'Transfer Mezzanine - 2', 'ADA'],
+  ['A', 145, 'Willowbrook - Rosa Parks', '00452', 'South', 'Standard'],
+  ['A', 145, 'Willowbrook - Rosa Parks', '00453', 'Transfer Mezzanine - 1', 'Standard'],
+  ['A', 145, 'Willowbrook - Rosa Parks', '00454', 'Transfer Mezzanine - 1', 'Standard'],
+  ['A', 145, 'Willowbrook - Rosa Parks', '00455', 'Transfer Mezzanine - 1', 'Standard'],
+  ['A', 145, 'Willowbrook - Rosa Parks', '00456', 'Transfer Mezzanine - 1', 'Standard'],
+  ['A', 145, 'Willowbrook - Rosa Parks', '00458', 'North-East', 'Standard'],
+  ['A', 145, 'Willowbrook - Rosa Parks', '00459', 'North-East', 'ADA'],
+  ['A', 145, 'Willowbrook - Rosa Parks', '00460', 'Center Plaza', 'ADA'],
+
+  ['A', 167, 'Lake', '00508', 'Main', 'Standard'],
+  ['A', 167, 'Lake', '00510', 'Main', 'ADA'],
+
+  ['A', 168, 'Allen', '00505', 'North East', 'Standard'],
+  ['A', 168, 'Allen', '00506', 'North East', 'ADA'],
+  ['A', 168, 'Allen', '00507', 'North East', 'ADA'],
+
+  ['A', 2975, 'Glendora', '00462', 'West', 'ADA'],
+  ['A', 2975, 'Glendora', '00463', 'West', 'ADA'],
+  ['A', 2975, 'Glendora', '00466', 'East', 'ADA'],
+  ['A', 2975, 'Glendora', '00467', 'East', 'ADA'],
+
+  ['A', 2976, 'San Dimas', '00470', 'West', 'ADA'],
+  ['A', 2976, 'San Dimas', '00471', 'West', 'ADA'],
+
+  ['A', 2977, 'La Verne', '00478', 'West', 'ADA'],
+  ['A', 2977, 'La Verne', '00479', 'West', 'ADA'],
+  ['A', 2977, 'La Verne', '00482', 'East', 'ADA'],
+  ['A', 2977, 'La Verne', '00483', 'East', 'ADA'],
+
+  ['A', 2978, 'Pomona', '00486', 'West', 'ADA'],
+  ['A', 2978, 'Pomona', '00487', 'West', 'ADA'],
+  ['A', 2978, 'Pomona', '00488', 'West', 'Standard'],
+  ['A', 2978, 'Pomona', '00489', 'West', 'Standard'],
+  ['A', 2978, 'Pomona', '00490', 'West', 'Standard'],
+  ['A', 2978, 'Pomona', '00493', 'East-West', 'ADA'],
+  ['A', 2978, 'Pomona', '00494', 'East-West', 'ADA'],
+  ['A', 2978, 'Pomona', '00497', 'East-East', 'ADA'],
+  ['A', 2978, 'Pomona', '00498', 'East-East', 'ADA'],
 
   // B Line
   ['B', 104, 'Westlake/MacArthur Park', '00901', 'South', 'Standard'],
@@ -272,55 +336,19 @@ const RAW_DATA = [
   ['B', 131, 'Hollywood/Western', '00127', 'Main', 'Standard'],
   ['B', 131, 'Hollywood/Western', '00128', 'Main', 'ADA'],
 
-  ['A', 144, 'Firestone', '00605', 'North', 'Standard'],
-  ['A', 144, 'Firestone', '00606', 'North', 'Standard'],
-  ['A', 144, 'Firestone', '00608', 'South', 'Standard'],
-  ['A', 144, 'Firestone', '00609', 'South', 'ADA'],
-
-  ['A', 145, 'Willowbrook - Rosa Parks', '00333', 'Center Plaza', 'Standard'],
-  ['A', 145, 'Willowbrook - Rosa Parks', '00334', 'Center Plaza', 'Standard'],
-  ['A', 145, 'Willowbrook - Rosa Parks', '00335', 'Center Plaza', 'ADA'],
-  ['A', 145, 'Willowbrook - Rosa Parks', '00337', 'Center Plaza', 'Standard'],
-  ['A', 145, 'Willowbrook - Rosa Parks', '00340', 'West', 'ADA'],
-  ['A', 145, 'Willowbrook - Rosa Parks', '00342', 'West', 'Standard'],
-  ['A', 145, 'Willowbrook - Rosa Parks', '00343', 'West', 'Standard'],
-  ['A', 145, 'Willowbrook - Rosa Parks', '00345', 'West', 'Standard'],
-  ['A', 145, 'Willowbrook - Rosa Parks', '00346', 'West', 'Standard'],
-  ['A', 145, 'Willowbrook - Rosa Parks', '00349', 'Transfer Mezzanine - 1', 'Standard'],
-  ['A', 145, 'Willowbrook - Rosa Parks', '00350', 'Transfer Mezzanine - 1', 'Standard'],
-  ['A', 145, 'Willowbrook - Rosa Parks', '00351', 'Transfer Mezzanine - 1', 'Standard'],
-  ['A', 145, 'Willowbrook - Rosa Parks', '00353', 'Street Level Elev', 'ADA'],
-  ['A', 145, 'Willowbrook - Rosa Parks', '00357', 'Transfer Mezzanine - 2', 'Standard'],
-  ['A', 145, 'Willowbrook - Rosa Parks', '00358', 'Transfer Mezzanine - 2', 'Standard'],
-  ['A', 145, 'Willowbrook - Rosa Parks', '00450', 'South', 'ADA'],
-  ['A', 145, 'Willowbrook - Rosa Parks', '00451', 'Transfer Mezzanine - 2', 'ADA'],
-  ['A', 145, 'Willowbrook - Rosa Parks', '00452', 'South', 'Standard'],
-  ['A', 145, 'Willowbrook - Rosa Parks', '00453', 'Transfer Mezzanine - 1', 'Standard'],
-  ['A', 145, 'Willowbrook - Rosa Parks', '00454', 'Transfer Mezzanine - 1', 'Standard'],
-  ['A', 145, 'Willowbrook - Rosa Parks', '00455', 'Transfer Mezzanine - 1', 'Standard'],
-  ['A', 145, 'Willowbrook - Rosa Parks', '00456', 'Transfer Mezzanine - 1', 'Standard'],
-  ['A', 145, 'Willowbrook - Rosa Parks', '00458', 'North-East', 'Standard'],
-  ['A', 145, 'Willowbrook - Rosa Parks', '00459', 'North-East', 'ADA'],
-  ['A', 145, 'Willowbrook - Rosa Parks', '00460', 'Center Plaza', 'ADA'],
-
-  ['A', 167, 'Lake', '00508', 'Main', 'Standard'],
-  ['A', 167, 'Lake', '00510', 'Main', 'ADA'],
-
-  ['A', 168, 'Allen', '00505', 'North East', 'Standard'],
-  ['A', 168, 'Allen', '00506', 'North East', 'ADA'],
-  ['A', 168, 'Allen', '00507', 'North East', 'ADA'],
-
-  // K Line
-  ['K', 171, 'Douglas', '00436', 'North', 'Standard'],
-  ['K', 171, 'Douglas', '00437', 'North', 'Standard'],
-  ['K', 171, 'Douglas', '00438', 'North', 'ADA'],
-  ['K', 171, 'Douglas', '00440', 'South', 'Standard'],
-  ['K', 171, 'Douglas', '00441', 'South', 'Standard'],
-  ['K', 171, 'Douglas', '00442', 'South', 'ADA'],
-  ['K', 171, 'Douglas', '00475', 'South', 'ADA'],
-  ['K', 171, 'Douglas', '00530', 'South', 'ADA'],
-
   // C Line
+  ['C', 60, 'Norwalk', '00300', 'East', 'ADA'],
+  ['C', 60, 'Norwalk', '00301', 'East', 'Standard'],
+  ['C', 60, 'Norwalk', '00302', 'East', 'Standard'],
+  ['C', 60, 'Norwalk', '00303', 'East', 'Standard'],
+  ['C', 60, 'Norwalk', '00304', 'East', 'ADA'],
+  ['C', 60, 'Norwalk', '00305', 'East', 'ADA'],
+  ['C', 60, 'Norwalk', '00307', 'West', 'ADA'],
+  ['C', 60, 'Norwalk', '00308', 'West', 'Standard'],
+  ['C', 60, 'Norwalk', '00532', 'West', 'Standard'],
+  ['C', 60, 'Norwalk', '00533', 'West', 'ADA'],
+  ['C', 60, 'Norwalk', '00534', 'West', 'ADA'],
+
   ['C', 174, 'Aviation/Imperial', '00411', 'East', 'Standard'],
   ['C', 174, 'Aviation/Imperial', '00412', 'East', 'Standard'],
   ['C', 174, 'Aviation/Imperial', '00413', 'East', 'ADA'],
@@ -330,30 +358,6 @@ const RAW_DATA = [
   ['C', 174, 'Aviation/Imperial', '00472', 'Center', 'ADA'],
   ['C', 174, 'Aviation/Imperial', '00538', 'Center', 'ADA'],
 
-  // A Line
-  ['A', 2975, 'Glendora', '00462', 'West', 'ADA'],
-  ['A', 2975, 'Glendora', '00463', 'West', 'ADA'],
-  ['A', 2975, 'Glendora', '00466', 'East', 'ADA'],
-  ['A', 2975, 'Glendora', '00467', 'East', 'ADA'],
-
-  ['A', 2976, 'San Dimas', '00470', 'West', 'ADA'],
-  ['A', 2976, 'San Dimas', '00471', 'West', 'ADA'],
-
-  ['A', 2977, 'La Verne', '00478', 'West', 'ADA'],
-  ['A', 2977, 'La Verne', '00479', 'West', 'ADA'],
-  ['A', 2977, 'La Verne', '00482', 'East', 'ADA'],
-  ['A', 2977, 'La Verne', '00483', 'East', 'ADA'],
-
-  ['A', 2978, 'Pomona', '00486', 'West', 'ADA'],
-  ['A', 2978, 'Pomona', '00487', 'West', 'ADA'],
-  ['A', 2978, 'Pomona', '00488', 'West', 'Standard'],
-  ['A', 2978, 'Pomona', '00489', 'West', 'Standard'],
-  ['A', 2978, 'Pomona', '00490', 'West', 'Standard'],
-  ['A', 2978, 'Pomona', '00493', 'East-West', 'ADA'],
-  ['A', 2978, 'Pomona', '00494', 'East-West', 'ADA'],
-  ['A', 2978, 'Pomona', '00497', 'East-East', 'ADA'],
-  ['A', 2978, 'Pomona', '00498', 'East-East', 'ADA'],
-
   // D Line
   ['D', 126, 'Wilshire/Normandie', '00169', 'Main', 'Standard'],
   ['D', 126, 'Wilshire/Normandie', '00170', 'Main', 'Standard'],
@@ -362,6 +366,14 @@ const RAW_DATA = [
   ['D', 126, 'Wilshire/Normandie', '00173', 'Main', 'Standard'],
   ['D', 126, 'Wilshire/Normandie', '00950', 'Main', 'ADA'],
   ['D', 126, 'Wilshire/Normandie', '00951', 'Main', 'ADA'],
+
+  ['D', 127, 'Wilshire/Western', '00930', 'Main', 'Standard'],
+  ['D', 127, 'Wilshire/Western', '00931', 'Main', 'Standard'],
+  ['D', 127, 'Wilshire/Western', '00932', 'Main', 'Standard'],
+  ['D', 127, 'Wilshire/Western', '00933', 'Main', 'Standard'],
+  ['D', 127, 'Wilshire/Western', '00934', 'Main', 'ADA'],
+  ['D', 127, 'Wilshire/Western', '00935', 'Main', 'ADA'],
+  ['D', 127, 'Wilshire/Western', '00936', 'Main', 'ADA'],
 
   ['D', 2986, 'Wilshire/La Brea', '00184', 'Main', 'Standard'],
   ['D', 2986, 'Wilshire/La Brea', '00185', 'Main', 'Standard'],
@@ -381,15 +393,16 @@ const RAW_DATA = [
   ['D', 2988, 'Wilshire/La Cienega', '00921', 'Main', 'Standard'],
   ['D', 2988, 'Wilshire/La Cienega', '00922', 'Main', 'ADA'],
 
-  ['D', 127, 'Wilshire/Western', '00930', 'Main', 'Standard'],
-  ['D', 127, 'Wilshire/Western', '00931', 'Main', 'Standard'],
-  ['D', 127, 'Wilshire/Western', '00932', 'Main', 'Standard'],
-  ['D', 127, 'Wilshire/Western', '00933', 'Main', 'Standard'],
-  ['D', 127, 'Wilshire/Western', '00934', 'Main', 'ADA'],
-  ['D', 127, 'Wilshire/Western', '00935', 'Main', 'ADA'],
-  ['D', 127, 'Wilshire/Western', '00936', 'Main', 'ADA'],
-
   // K Line
+  ['K', 171, 'Douglas', '00436', 'North', 'Standard'],
+  ['K', 171, 'Douglas', '00437', 'North', 'Standard'],
+  ['K', 171, 'Douglas', '00438', 'North', 'ADA'],
+  ['K', 171, 'Douglas', '00440', 'South', 'Standard'],
+  ['K', 171, 'Douglas', '00441', 'South', 'Standard'],
+  ['K', 171, 'Douglas', '00442', 'South', 'ADA'],
+  ['K', 171, 'Douglas', '00475', 'South', 'ADA'],
+  ['K', 171, 'Douglas', '00530', 'South', 'ADA'],
+
   ['K', 2941, 'LAX/MTC', '00206', 'South', 'ADA'],
   ['K', 2941, 'LAX/MTC', '00207', 'South', 'ADA'],
   ['K', 2941, 'LAX/MTC', '00208', 'South', 'ADA'],
@@ -599,17 +612,19 @@ function lookupGate(gateInput){
     return `
       <div class="match-block">
         <div><b>${displayGate(r.gate)}</b> — ${escapeHtml(r.siteName)} (Line ${escapeHtml(r.line)} – ${escapeHtml(color)} – Site ID ${escapeHtml(r.siteId)})</div>
-        <div class="gate-header">
-          <div>Gate#</div>
-          <div>Array</div>
-          <div>Type</div>
-          <div></div>
-        </div>
-        <div class="gate-row">
-          <div>${displayGate(r.gate)}</div>
-          <div>${escapeHtml(r.array)}</div>
-          <div>${escapeHtml(r.type)}</div>
-          <div>${r.qr ? qrBadge(true) : ''}</div>
+        <div class="gate-table">
+          <div class="gate-header">
+            <div>Gate#</div>
+            <div>Array</div>
+            <div>Type</div>
+            <div></div>
+          </div>
+          <div class="gate-row">
+            <div>${displayGate(r.gate)}</div>
+            <div>${escapeHtml(r.array)}</div>
+            <div>${escapeHtml(r.type)}</div>
+            <div>${r.qr ? qrBadge(true) : ''}</div>
+          </div>
         </div>
       </div>
     `;
@@ -650,13 +665,15 @@ function lookupSite(term){
     return `
       <div class="site-block">
         <div><b>${escapeHtml(s.siteName)}</b> (Line ${escapeHtml(s.line)} – ${escapeHtml(color)} – Site ID ${escapeHtml(s.siteId)})</div>
-        <div class="gate-header">
-          <div>Gate#</div>
-          <div>Array</div>
-          <div>Type</div>
-          <div></div>
+        <div class="gate-table">
+          <div class="gate-header">
+            <div>Gate#</div>
+            <div>Array</div>
+            <div>Type</div>
+            <div></div>
+          </div>
+          ${gateRows}
         </div>
-        ${gateRows}
       </div>
     `;
   }).join('');
