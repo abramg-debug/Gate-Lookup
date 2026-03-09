@@ -109,7 +109,8 @@
   }
   .gate-header{
     display:grid;
-    grid-template-columns:90px 1fr 120px 60px;
+    grid-template-columns:70px 1fr 110px 60px;
+    column-gap:14px;
     font-weight:700;
     color:var(--muted);
     margin-top:10px;
@@ -118,7 +119,8 @@
   }
   .gate-row{
     display:grid;
-    grid-template-columns:90px 1fr 120px 60px;
+    grid-template-columns:70px 1fr 110px 60px;
+    column-gap:14px;
     margin:2px 0;
     align-items:center;
   }
@@ -513,6 +515,10 @@ function padGate(v){
   return s ? s.padStart(5, "0") : "";
 }
 
+function displayGate(g){
+  return String(parseInt(g, 10));
+}
+
 function escapeHtml(str){
   return String(str).replace(/[&<>"']/g, ch => ({
     '&':'&amp;',
@@ -559,7 +565,7 @@ function lookupGate(gateInput){
     out.className = 'result ok';
     out.innerHTML = `
       <div class="kvs">
-        <div class="k">Gate #</div><div class="v">${escapeHtml(rec.gate)}</div>
+        <div class="k">Gate #</div><div class="v">${displayGate(rec.gate)}</div>
         <div class="k">Line</div><div class="v">${escapeHtml(rec.line)} (${escapeHtml(color)})</div>
         <div class="k">Site ID</div><div class="v">${escapeHtml(rec.siteId)}</div>
         <div class="k">Site Name</div><div class="v">${escapeHtml(rec.siteName)}</div>
@@ -592,7 +598,7 @@ function lookupGate(gateInput){
     const color = lineColors[r.line] || 'Unknown';
     return `
       <div class="match-block">
-        <div><b>${escapeHtml(r.gate)}</b> — ${escapeHtml(r.siteName)} (Line ${escapeHtml(r.line)} – ${escapeHtml(color)} – Site ID ${escapeHtml(r.siteId)})</div>
+        <div><b>${displayGate(r.gate)}</b> — ${escapeHtml(r.siteName)} (Line ${escapeHtml(r.line)} – ${escapeHtml(color)} – Site ID ${escapeHtml(r.siteId)})</div>
         <div class="gate-header">
           <div>Gate#</div>
           <div>Array</div>
@@ -600,7 +606,7 @@ function lookupGate(gateInput){
           <div></div>
         </div>
         <div class="gate-row">
-          <div>${escapeHtml(r.gate)}</div>
+          <div>${displayGate(r.gate)}</div>
           <div>${escapeHtml(r.array)}</div>
           <div>${escapeHtml(r.type)}</div>
           <div>${r.qr ? qrBadge(true) : ''}</div>
@@ -633,7 +639,7 @@ function lookupSite(term){
       .sort((a, b) => a.gate.localeCompare(b.gate))
       .map(g => `
         <div class="gate-row">
-          <div>${escapeHtml(g.gate)}</div>
+          <div>${displayGate(g.gate)}</div>
           <div>${escapeHtml(g.array)}</div>
           <div>${escapeHtml(g.type)}</div>
           <div>${g.qr ? qrBadge(true) : ''}</div>
